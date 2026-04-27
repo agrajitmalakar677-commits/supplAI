@@ -1,0 +1,8 @@
+id,name,stock,predictedDemand,status,category
+shampoo-a,Shampoo A,45,150,Low,Hair Care
+shampoo-b,Shampoo B,115,130,Normal,Hair Care
+shampoo-c,Shampoo C,20,180,Low,Hair Care
+shampoo-d,Shampoo D,310,250,Normal,Hair Care
+shampoo-e,Shampoo E,90,90,Normal,Hair Care
+shampoo-f,Conditioner X,200,210,Normal,Hair Care
+kellogs,chocos,200,210,Normal,food and beverage

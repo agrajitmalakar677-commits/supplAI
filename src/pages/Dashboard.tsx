@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { 
   Package, 
   TrendingUp, 
@@ -26,8 +27,7 @@ import { geminiService } from "../services/geminiService";
 import { useNotify } from "../components/NotificationProvider";
 
 export default function Dashboard() {
-// Replace line 29 with this:
-const { data: products, loading } = useFetch<Product[]>("https://suppl-ai-gamma.vercel.app/api");;
+  const { data: products, loading } = useFetch<Product[]>("/api/products");
   const [aiRecommendation, setAiRecommendation] = useState<string>("Analyzing recent inventory trends...");
   const [isGenerating, setIsGenerating] = useState(false);
   const { notify } = useNotify();
@@ -111,13 +111,15 @@ const { data: products, loading } = useFetch<Product[]>("https://suppl-ai-gamma.
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+        <Link to="/recommendations" className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:border-red-200 transition-colors cursor-pointer">
           <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Low Stock Items</p>
           <div className="flex items-end justify-between">
             <p className="text-2xl font-bold text-red-600">{lowStockProducts}</p>
-            <span className="text-[11px] font-bold text-red-500">Requires restock</span>
+            <span className="text-[11px] font-bold text-red-500 flex items-center gap-1">
+              Requires restock <ArrowUpRight size={12} />
+            </span>
           </div>
-        </div>
+        </Link>
 
         <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
           <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Predicted Demand Vol.</p>

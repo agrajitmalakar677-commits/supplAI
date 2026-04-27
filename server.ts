@@ -15,6 +15,14 @@ async function startServer() {
 
   app.use(express.json());
 
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok", 
+      env: process.env.NODE_ENV,
+      time: new Date().toISOString()
+    });
+  });
+
   // Initial Mock Data (will be overwritten if CSV exists)
   let products = [
     {
@@ -109,18 +117,26 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VITE_PROD === "true";
+  
+  if (!isProduction) {
+    console.log("🚀 Starting in DEVELOPMENT mode (Vite Middleware)");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
+    console.log("📦 Starting in PRODUCTION mode (Static Assets)");
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    if (await fs.pathExists(distPath)) {
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    } else {
+      console.warn("⚠️ Warning: 'dist' folder not found! API routes will still work, but client assets might fail.");
+    }
   }
 
   app.listen(PORT, "0.0.0.0", () => {
