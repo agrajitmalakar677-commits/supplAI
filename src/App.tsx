@@ -19,6 +19,18 @@ import {
 import { User } from "./types";
 import { NotificationProvider } from "./components/NotificationProvider";
 
+// Page Imports
+import Login from "./pages/Auth/Login";
+import Signup from "./pages/Auth/Signup";
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products/ProductsList";
+import ProductDetail from "./pages/Products/ProductDetail";
+import Forecast from "./pages/Forecast";
+import Recommendations from "./pages/Recommendations";
+import Simulation from "./pages/Simulation";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
+
 // Search Context
 interface SearchContextType {
   searchQuery: string;
@@ -216,18 +228,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function ProtectedRouteInner({ children }: { children: React.ReactNode }) {
   return <MainLayout>{children}</MainLayout>;
 }
-
-// Placeholder for real components (to be implemented next)
-import Login from "./pages/Auth/Login";
-import Signup from "./pages/Auth/Signup";
-import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products/ProductsList";
-import ProductDetail from "./pages/Products/ProductDetail";
-import Forecast from "./pages/Forecast";
-import Recommendations from "./pages/Recommendations";
-import Simulation from "./pages/Simulation";
-import Profile from "./pages/Profile";
-import Orders from "./pages/Orders";
 
 export default function App() {
   return (

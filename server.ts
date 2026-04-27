@@ -117,25 +117,38 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  const isProduction = process.env.NODE_ENV === "production" || process.env.VITE_PROD === "true";
+  const isProduction = process.env.NODE_ENV === "production";
   
+  console.log(`📡 Server Environment: ${process.env.NODE_ENV}`);
+
   if (!isProduction) {
     console.log("🚀 Starting in DEVELOPMENT mode (Vite Middleware)");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+      console.log("✅ Vite middleware loaded");
+    } catch (viteError) {
+      console.error("❌ Failed to start Vite server:", viteError);
+    }
   } else {
     console.log("📦 Starting in PRODUCTION mode (Static Assets)");
     const distPath = path.join(process.cwd(), 'dist');
-    if (await fs.pathExists(distPath)) {
+    
+    // Check if dist exists, if not, we might be in a state where build hasn't run
+    if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
       app.get('*', (req, res) => {
         res.sendFile(path.join(distPath, 'index.html'));
       });
+      console.log(`✅ Serving static files from ${distPath}`);
     } else {
-      console.warn("⚠️ Warning: 'dist' folder not found! API routes will still work, but client assets might fail.");
+      console.error("❌ Error: 'dist' folder not found in production mode! Fallback to health check only.");
+      app.get('*', (req, res) => {
+        res.status(500).send("Application not built. Please run 'npm run build' first.");
+      });
     }
   }
 
