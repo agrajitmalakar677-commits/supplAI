@@ -45,10 +45,11 @@ let products = [
   }
 ];
 
-const csvPath = path.join(process.cwd(), "sales_data.csv");
+const csvPath = path.join(__dirname, "sales_data.csv");
 
 const loadDataFromCSV = async () => {
   try {
+    console.log(`📂 Attempting to load data from ${csvPath}`);
     if (fs.existsSync(csvPath)) {
       const fileContent = fs.readFileSync(csvPath, "utf-8");
       const records = parse(fileContent, {
@@ -57,15 +58,17 @@ const loadDataFromCSV = async () => {
         cast: true
       });
 
-      // Map CSV records back to our product structure
-      products = records.map((r: any) => ({
-        ...r,
-        // Ensure salesHistory exists even if not in CSV for simplicity
-        salesHistory: r.salesHistory 
-          ? (typeof r.salesHistory === 'string' ? r.salesHistory.split(',').map(Number) : r.salesHistory)
-          : [50, 60, 45, 70, 55, 65, 40]
-      }));
-      console.log("✅ Inventory updated from sales_data.csv");
+      if (records && records.length > 0) {
+        products = records.map((r: any) => ({
+          ...r,
+          salesHistory: r.salesHistory 
+            ? (typeof r.salesHistory === 'string' ? r.salesHistory.split(',').map(Number) : r.salesHistory)
+            : [50, 60, 45, 70, 55, 65, 40]
+        }));
+        console.log(`✅ Inventory updated: ${products.length} products loaded.`);
+      }
+    } else {
+      console.log("⚠️ sales_data.csv not found, using default mock data.");
     }
   } catch (error) {
     console.warn("⚠️ Warning reading CSV:", error);
@@ -76,7 +79,7 @@ const loadDataFromCSV = async () => {
 loadDataFromCSV();
 
 // WATCH FOR CSV CHANGES (Local only)
-if (!process.env.VERCEL) {
+if (process.env.NODE_ENV !== "production") {
   chokidar.watch(csvPath).on("change", () => {
     console.log("🔄 CSV Change detected, reloading inventory...");
     loadDataFromCSV();
@@ -87,7 +90,12 @@ const orders: any[] = [];
 
 // API Routes
 app.get("/api/products", (req, res) => {
-  res.json(products);
+  try {
+    res.json(products);
+  } catch (err) {
+    console.error("API Error /api/products:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.get("/api/products/:id", (req, res) => {
@@ -156,14 +164,16 @@ async function startServer() {
     }
   }
 
-  // Only listen if we're not on Vercel
-  if (!process.env.VERCEL) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  }
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 }
 
-startServer();
+// Only run the full server setup (Vite/Static) if we're not on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+} else {
+  console.log("⚡ Vercel Serverless Function active");
+}
 
 export default app;

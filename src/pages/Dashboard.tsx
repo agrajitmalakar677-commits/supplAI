@@ -27,7 +27,7 @@ import { geminiService } from "../services/geminiService";
 import { useNotify } from "../components/NotificationProvider";
 
 export default function Dashboard() {
-  const { data: products, loading } = useFetch<Product[]>("/api/products");
+  const { data: products, loading, error } = useFetch<Product[]>("/api/products");
   const [aiRecommendation, setAiRecommendation] = useState<string>("Analyzing recent inventory trends...");
   const [isGenerating, setIsGenerating] = useState(false);
   const { notify } = useNotify();
@@ -70,7 +70,13 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || !products) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
+  if (loading || !products) return (
+    <div className="flex flex-col items-center justify-center h-64 gap-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      {error && <p className="text-red-500 text-sm">Error: {error}. Falling back to cached data...</p>}
+      {!loading && !products && !error && <p className="text-slate-500 text-sm">No inventory data found.</p>}
+    </div>
+  );
 
   const totalProducts = products.length;
   const lowStockProducts = products.filter(p => p.status === "Low").length;
