@@ -45,11 +45,11 @@ let products = [
   }
 ];
 
-const csvPath = path.join(__dirname, "sales_data.csv");
+const csvPath = path.join(process.cwd(), "sales_data.csv");
 
 const loadDataFromCSV = async () => {
   try {
-    console.log(`📂 Attempting to load data from ${csvPath}`);
+    console.log(`📂 Testing access to CSV at: ${csvPath}`);
     if (fs.existsSync(csvPath)) {
       const fileContent = fs.readFileSync(csvPath, "utf-8");
       const records = parse(fileContent, {
@@ -65,10 +65,10 @@ const loadDataFromCSV = async () => {
             ? (typeof r.salesHistory === 'string' ? r.salesHistory.split(',').map(Number) : r.salesHistory)
             : [50, 60, 45, 70, 55, 65, 40]
         }));
-        console.log(`✅ Inventory updated: ${products.length} products loaded.`);
+        console.log(`✅ successfully loaded ${products.length} products from CSV`);
       }
     } else {
-      console.log("⚠️ sales_data.csv not found, using default mock data.");
+      console.log("⚠️ sales_data.csv not found at root, using default mock data. Check if file is in the repo.");
     }
   } catch (error) {
     console.warn("⚠️ Warning reading CSV:", error);
