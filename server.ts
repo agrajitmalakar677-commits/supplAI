@@ -1,16 +1,22 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs-extra";
 import { parse } from "csv-parse/sync";
-import chokidar from "chokidar";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
+
+// Dynamic import Vite to avoid heavy load in serverless
+let createViteServer: any;
+if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+  import("vite").then(m => {
+    createViteServer = m.createServer;
+  });
+}
 
 app.use(express.json());
 
@@ -45,7 +51,7 @@ let products = [
   }
 ];
 
-const csvPath = path.join(process.cwd(), "sales_data.csv");
+const csvPath = path.join(__dirname, "sales_data.csv");
 
 const loadDataFromCSV = async () => {
   try {
@@ -68,7 +74,7 @@ const loadDataFromCSV = async () => {
         console.log(`✅ successfully loaded ${products.length} products from CSV`);
       }
     } else {
-      console.log("⚠️ sales_data.csv not found at root, using default mock data. Check if file is in the repo.");
+      console.log("⚠️ sales_data.csv not found, using default mock data.");
     }
   } catch (error) {
     console.warn("⚠️ Warning reading CSV:", error);
@@ -79,8 +85,9 @@ const loadDataFromCSV = async () => {
 loadDataFromCSV();
 
 // WATCH FOR CSV CHANGES (Local only)
-if (process.env.NODE_ENV !== "production") {
-  chokidar.watch(csvPath).on("change", () => {
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  const chokidar = await import("chokidar");
+  chokidar.default.watch(csvPath).on("change", () => {
     console.log("🔄 CSV Change detected, reloading inventory...");
     loadDataFromCSV();
   });
@@ -133,9 +140,13 @@ async function startServer() {
   
   console.log(`📡 Server Environment: ${process.env.NODE_ENV}`);
 
-  if (!isProduction) {
+  if (!isProduction && !process.env.VERCEL) {
     console.log("🚀 Starting in DEVELOPMENT mode (Vite Middleware)");
     try {
+      if (!createViteServer) {
+        const m = await import("vite");
+        createViteServer = m.createServer;
+      }
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
